@@ -2,8 +2,8 @@ package web
 
 import (
 	"git.chiefnoah.tech/chiefnoah/gocomics/config"
+	"github.com/gin-gonic/gin"
 	"net/http"
-	"io"
 )
 
 //This is where the REST API stuff will go
@@ -11,16 +11,12 @@ import (
 //Starts the API server and registers handlers
 func Start(c *config.ApiConfig) {
 	//TODO: register handlers
-	http.HandleFunc("/", RootHandler)
+	router := gin.Default()
 
-	if c.UseTLS || c.ForceTLS {
-		http.ListenAndServeTLS(c.SSLPort, "cert.pem", "key.pem", nil)
-	}
-	if !c.ForceTLS {
-		http.ListenAndServe(c.HttpPort, nil)
-	}
+	router.GET("/", rootHandler)
+	router.RunTLS(c.HttpPort, "./test.pem", "./test.key")
 }
 
-func RootHandler(w http.ResponseWriter, req *http.Request) {
-	io.WriteString(w, "error... nothing here :(")
+func rootHandler(c *gin.Context) {
+	c.String(http.StatusOK, "hi")
 }
