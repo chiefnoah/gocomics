@@ -2,13 +2,14 @@ package comicscanner
 
 import (
 	//"github.com/fsnotify/fsnotify"
-	"path"
-	"strings"
-	"path/filepath"
-	"os"
-	"fmt"
 	"crypto/md5"
+	"fmt"
 	"io/ioutil"
+	"os"
+	"path"
+	"path/filepath"
+	"strings"
+	"log"
 )
 
 func Scan(f string) error {
@@ -27,7 +28,11 @@ func visit(p string, f os.FileInfo, e error) error {
 		fmt.Printf("Found cbz file!\n")
 
 		//TODO: parse comic info
-		file, _ := ioutil.ReadFile(p)
+		file, err := ioutil.ReadFile(p)
+		if err != nil {
+			log.Print("Error: ", err)
+			return err
+		}
 		md5 := md5.Sum(file)
 		fmt.Printf("MD5: %x\n", md5)
 

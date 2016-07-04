@@ -1,8 +1,8 @@
 package config
 
 type ApiConfig struct {
-	UseTLS bool
+	UseTLS   bool
 	ForceTLS bool
-	SSLPort string
+	SSLPort  string
 	HttpPort string
 }

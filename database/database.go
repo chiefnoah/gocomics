@@ -2,9 +2,9 @@ package database
 
 import (
 	"database/sql"
-	"log"
-	_ "github.com/mattn/go-sqlite3"
 	"git.chiefnoah.tech/chiefnoah/gocomics/models"
+	_ "github.com/mattn/go-sqlite3"
+	"log"
 )
 
 var db *sql.DB
@@ -143,14 +143,15 @@ func Init() {
 
 }
 
-func AddComic(comic models.ComicInfo) bool {
+func AddComic(comic models.ComicInfo, file models.ComicFile) bool {
 	db, err := sql.Open("sqlite3", "./library.mdb")
 	if err != nil {
 		log.Fatal("Unable to open database: ", err)
 	}
 
-	INSERT_COMIC_INFO := "INSERT OR IGNORE INTO comic_info(filesize, date_added, hash) VALUES(?, ?, ?);"
-	//INSERT_COMIC := "INSERT OR IGNORE INTO comic(parentId, comicInfoId, fileName, path) VALUES ((SELECT id FROM folder WHERE path = ?), ?, ?, ?)"
+	INSERT_COMIC_FILE_INFO := `INSERT INTO ComicFile(RelativePath, AbsolutePath, Hash, Filesize) VALUES(?, ?, ?, ?)`
+
+
 
 	tx, err := db.Begin()
 	if err != nil {

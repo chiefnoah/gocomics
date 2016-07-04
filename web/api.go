@@ -22,4 +22,3 @@ func Start(c *config.ApiConfig) {
 func rootHandler(c *gin.Context) {
 	c.String(http.StatusOK, "hi")
 }
-

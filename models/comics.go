@@ -4,7 +4,7 @@ package models
 MGA database structures used for internal stuff
 */
 type ComicInfo struct {
-	ID          int      `json:"id"`
+	ID          int      `json:"id"sql:"id"`
 	Title       string   `json:"title"`
 	Series      string   `json:"series"`
 	IssueNumber float32  `json:"issue_number"`
@@ -19,7 +19,7 @@ type ComicInfo struct {
 	Rating      float32  `json:"rating"`
 	Status      string   `json:"status"`
 	Bookmarks   []int    `json:"bookmarks"`
-	Other       []string `json:"other"` ////Other tags are formatted "[tagname]:[tag]" semicolon delimited
+	Other       []string `json:"other"` //Other tags are formatted "[tagname]:[tag]" semicolon delimited
 }
 
 type ComicFile struct {
