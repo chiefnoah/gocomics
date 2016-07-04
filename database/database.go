@@ -5,9 +5,15 @@ import (
 	"git.chiefnoah.tech/chiefnoah/gocomics/models"
 	_ "github.com/mattn/go-sqlite3"
 	"log"
+	"strings"
 )
 
-var db *sql.DB
+//holds a reference to a database connection and a transaction used for large database processes
+//like adding a shitton of comics ;P
+type Dbhandler struct {
+	Transaction *sql.Tx
+	Db *sql.DB
+}
 
 func Init() {
 
@@ -51,6 +57,7 @@ func Init() {
 	'ID'	INTEGER PRIMARY KEY AUTOINCREMENT,
 	'RelativePath'	TEXT NOT NULL,
 	'AbsolutePath'	TEXT NOT NULL,
+	'FileName' TEXT NOT NULL,
 	'Hash'	TEXT NOT NULL UNIQUE,
 	'Filesize'	INTEGER DEFAULT 0
 );`
@@ -61,6 +68,7 @@ func Init() {
 	'IssueNumber'	REAL DEFAULT 0.0,
 	'PageCount'	INTEGER,
 	'ComicFileID'	INTEGER,
+	'Hash'		TEXT NOT NULL,
 	'Volume'	TEXT,
 	'DateAdded'	INTEGER DEFAULT 0,
 	'PublishDate'	INTEGER,
@@ -143,29 +151,59 @@ func Init() {
 
 }
 
-func AddComic(comic models.ComicInfo, file models.ComicFile) bool {
+func(h *Dbhandler) AddComic(comic models.ComicInfo, file models.ComicFile) bool {
+
+	INSERT_COMIC_FILE_INFO := `INSERT INTO ComicFile(RelativePath, AbsolutePath, FileName, Hash, Filesize) VALUES(?, ?, ?, ?, ?)`
+
+	stmt, err := h.Transaction.Prepare(INSERT_COMIC_FILE_INFO)
+	defer stmt.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+	_, err = stmt.Exec(file.RelativePath, file.AbsolutePath, file.FileName, file.Hash, file.FileSize)
+	if err != nil {
+		//If the unique contraint on the HASH field fails, we just update the data
+		if strings.Contains(err.Error(), "UNIQUE") {
+			log.Print("File already in database, updating to latest info...")
+			sql := `UPDATE ComicFile SET RelativePath = ?, AbsolutePath = ?, FileName = ? WHERE Hash = ?`
+			st, err := h.Transaction.Prepare(sql)
+			defer st.Close()
+			if err != nil {
+				log.Fatal("Unable to prepare statement: ", err)
+			}
+			log.Printf("Updating with:%+v\n", file)
+			_, err = st.Exec(file.RelativePath, file.AbsolutePath, file.FileName, file.Hash)
+			if err != nil {
+				log.Fatal("error updating: ", err)
+			}
+
+		} else {
+			log.Fatal("Error inserting: ", err)
+		}
+	}
+
+	//log.Printf("Results:%+v\n", res)
+
+	return false
+}
+
+//Creates a new dbhandler object for running a transaction
+func BeginTransaction() *Dbhandler {
+	var handler Dbhandler
+
 	db, err := sql.Open("sqlite3", "./library.mdb")
 	if err != nil {
 		log.Fatal("Unable to open database: ", err)
 	}
-
-	INSERT_COMIC_FILE_INFO := `INSERT INTO ComicFile(RelativePath, AbsolutePath, Hash, Filesize) VALUES(?, ?, ?, ?)`
-
-
+	handler.Db = db
 
 	tx, err := db.Begin()
-	if err != nil {
-		log.Fatal(err)
-	}
+	handler.Transaction = tx
+	return &handler
+}
 
-	stmt, err := tx.Prepare(INSERT_COMIC_FILE_INFO)
-	res, _ := stmt.Exec(file.RelativePath, file.AbsolutePath, file.Hash, file.FileSize)
-	if err != nil {
-		log.Fatal(err)
-	}
-	log.Printf("Results:%x", res)
-
-	defer stmt.Close()
-
-	return false
+func(h *Dbhandler) FinishTransaction() error {
+	err := h.Transaction.Commit()
+	defer h.Db.Close()
+	return err
 }
