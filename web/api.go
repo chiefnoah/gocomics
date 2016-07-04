@@ -14,9 +14,12 @@ func Start(c *config.ApiConfig) {
 	router := gin.Default()
 
 	router.GET("/", rootHandler)
+	router.GET("/dbinfo", dbInfoHandler)
+	router.GET("/version", versionHandler)
 	router.RunTLS(c.HttpPort, "./test.pem", "./test.key")
 }
 
 func rootHandler(c *gin.Context) {
 	c.String(http.StatusOK, "hi")
 }
+
