@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"log"
+	"git.chiefnoah.tech/chiefnoah/gocomics/models"
+	"git.chiefnoah.tech/chiefnoah/gocomics/database"
 )
 
 func Scan(f string) error {
@@ -33,8 +35,18 @@ func visit(p string, f os.FileInfo, e error) error {
 			log.Print("Error: ", err)
 			return err
 		}
-		md5 := md5.Sum(file)
-		fmt.Printf("MD5: %x\n", md5)
+
+		var comicfile models.ComicFile
+
+		checksum := md5.Sum(file)
+		n := len(checksum)
+		comicfile.Hash = string(checksum[:n])
+		comicfile.FileSize = int64(f.Size())
+		comicfile.AbsolutePath = p
+		comicfile.RelativePath = ""
+
+		fmt.Printf("MD5: %x\n", comicfile.Hash)
+		database.AddComic(models.ComicInfo{}, comicfile)
 
 	}
 	return nil

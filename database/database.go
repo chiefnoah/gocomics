@@ -158,10 +158,12 @@ func AddComic(comic models.ComicInfo, file models.ComicFile) bool {
 		log.Fatal(err)
 	}
 
-	stmt, err := tx.Prepare(INSERT_COMIC_INFO)
+	stmt, err := tx.Prepare(INSERT_COMIC_FILE_INFO)
+	res, _ := stmt.Exec(file.RelativePath, file.AbsolutePath, file.Hash, file.FileSize)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Printf("Results:%x", res)
 
 	defer stmt.Close()
 

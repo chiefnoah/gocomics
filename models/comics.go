@@ -12,8 +12,8 @@ type ComicInfo struct {
 	Credits     credit   `json:"credits"`
 	Volume      string   `json:"volume"`
 	Genres      []string `json:"genres"`
-	DateAdded   int      `json:"date_added"`
-	PublishDate int      `json:"publish_date"`
+	DateAdded   int64      `json:"date_added"`
+	PublishDate int64      `json:"publish_date"`
 	Synopsis    string   `json:"synopsis"`
 	Characters  []string `json:"characters"`
 	Rating      float32  `json:"rating"`
@@ -27,7 +27,7 @@ type ComicFile struct {
 	RelativePath string `json:"relative_path"`
 	AbsolutePath string `json:"absolute_path"`
 	Hash         string `json:"hash"` //MD5 hash
-	FileSize     int    `json:"filesize"`
+	FileSize     int64    `json:"filesize"`
 }
 
 type credit struct {
@@ -49,8 +49,8 @@ type UserProgress struct {
 	ComicInfoID   int  `json:"comic_info_id"`
 	Read          bool `json:"read"`
 	Completed     bool `json:"completed"`
-	DateLastRead  int  `json:"date_last_read"`
-	DateCompleted int  `json:"date_completed"`
+	DateLastRead  int64  `json:"date_last_read"`
+	DateCompleted int64  `json:"date_completed"`
 	LastReadPage  int  `json:"last_read_page"`
 }
 
