@@ -16,7 +16,7 @@ func main() {
 	config := &config.ApiConfig{
 		false, false, ":3008", ":3000",
 	}
-	comicscanner.Scan("./comics")
+	go comicscanner.Scan("./comics")
 	web.Start(config)
 
 
