@@ -56,6 +56,18 @@ type UserProgress struct {
 	LastReadPage  int   `json:"last_read_page"`
 }
 
+//Used to create a pseudo directory structure.
+//All comics must belong to a category. The default behavior
+//is to make each folder that is walked a category
+type Category struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Parent   string `json:"parent"`
+	ParentId int    `json:"parent_id"`
+	IsRoot   bool   `json:"is_root"`
+	Full     string `json:"full"`
+}
+
 /*
 ComicStreamer compatibility structures
 */

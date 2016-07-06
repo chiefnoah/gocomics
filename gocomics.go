@@ -2,8 +2,8 @@ package main
 
 import (
 	"git.chiefnoah.tech/chiefnoah/gocomics/config"
-	"git.chiefnoah.tech/chiefnoah/gocomics/web"
 	"git.chiefnoah.tech/chiefnoah/gocomics/scanner"
+	"git.chiefnoah.tech/chiefnoah/gocomics/web"
 
 	"git.chiefnoah.tech/chiefnoah/gocomics/database"
 	"log"
@@ -12,18 +12,17 @@ import (
 
 //Let's get started!
 func main() {
-	f, err := os.OpenFile("log.txt", os.O_RDWR | os.O_CREATE | os.O_APPEND, 0666)
+	f, err := os.OpenFile("log.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatal("Can't write log file! D:")
 	}
 	defer f.Close()
-	log.SetOutput(f)
+	//log.SetOutput(f)
 	database.Init()
 
 	config := &config.ApiConfig{
-		false, false, ":3008", ":3000",
-	}
-	go comicscanner.Scan(`F:\eBooks\eComics\Manga`)
+		UseTLS: true, ForceTLS: false, SSLPort: ":3008", HttpPort: ":3000"}
+	go comicscanner.Scan(`./comics`)
 	web.Start(config)
 
 }

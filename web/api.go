@@ -16,9 +16,14 @@ func Start(c *config.ApiConfig) {
 	router.GET("/", rootHandler)
 	router.GET("/dbinfo", dbInfoHandler)
 	router.GET("/version", versionHandler)
-	router.RunTLS(c.HttpPort, "./test.pem", "./test.key")
+	router.GET("/folders/*path", foldersHandler)
+	router.Run(c.HttpPort)
+	router.RunTLS(c.SSLPort, "./test.pem", "./test.key")
+
 }
 
 func rootHandler(c *gin.Context) {
 	c.String(http.StatusOK, "hi")
 }
+
+
