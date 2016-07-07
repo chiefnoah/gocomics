@@ -20,9 +20,8 @@ func main() {
 	//log.SetOutput(f)
 	database.Init()
 
-	config := &config.ApiConfig{
-		UseTLS: true, ForceTLS: false, SSLPort: ":3008", HttpPort: ":3000"}
+	c := config.LoadConfigFile()
 	go comicscanner.Scan(`./comics`)
-	web.Start(config)
+	web.Start(c)
 
 }

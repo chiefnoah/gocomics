@@ -3,6 +3,11 @@ package web
 import (
 	"github.com/gin-gonic/gin"
 	"net/http"
+	"path/filepath"
+	"git.chiefnoah.tech/chiefnoah/gocomics/models"
+	"git.chiefnoah.tech/chiefnoah/gocomics/database"
+	"strings"
+	"fmt"
 )
 
 
@@ -26,6 +31,46 @@ func comicListHandler(c *gin.Context) {
 
 func foldersHandler(c *gin.Context) {
 	path := c.Param("path")
+	if path == "/" {
+		path = "/0"
+	}
 
-	c.String(http.StatusOK, "Test: " + path)
+	base := filepath.Base(path)
+	fmt.Println("Base: ", base)
+
+	var query = models.Category{
+		Name: base,
+	}
+	category := database.GetCategory(&query)
+	childrenFolders := database.GetChildrenCategories(category.ID)
+	fmt.Printf("Children folders: %+v", childrenFolders)
+	childrenComicsCount := database.GetChildrenComicsCount(category.ID)
+	childrenComics := models.CSComicCountResponse{
+		Count: childrenComicsCount,
+		URL_Path: "/comiclist?folder=" + category.Full,
+	}
+	folders := []models.CSFolder{}
+
+	for _, v := range *childrenFolders {
+		if(v.ID == 1) {
+			continue
+		}
+		csfolder := models.CSFolder{}
+		csfolder.URL_Path = "/folders/" + strings.Replace(v.Full, "\\", "/", -1)
+		csfolder.Name = v.Name
+		folders = append(folders, csfolder)
+	}
+
+	result := models.CSFolderResponse{
+		Current: category.Full,
+		Folders: folders,
+		Comics: childrenComics,
+	}
+
+
+	//for _, v := range categoryNames {
+		//TODO: query database for category
+	//}
+
+	c.JSON(http.StatusOK, result)
 }

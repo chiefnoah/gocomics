@@ -21,12 +21,12 @@ var dbhandler *database.Dbhandler
 
 func Scan(f string) error {
 	root = f
-	base := filepath.Base(f)
+	//base := filepath.Base(f)
 	//models.Category{ID: 1, Name: base, Parent: 1, IsRoot:true, Full: base}
 	//generates the temp and image directories
 	setupDirs()
 	dbhandler = database.BeginTransaction()
-	err := dbhandler.ExecuteSql(`INSERT OR IGNORE INTO Category(ID, Name, Parent, IsRoot, Full) VALUES(?, ?, ?, ?, ?)`, 1, base, 1, true, base)
+	err := dbhandler.ExecuteSql(`INSERT OR IGNORE INTO Category(ID, Name, Parent, IsRoot, Full) VALUES(?, ?, ?, ?, ?)`, 1, "0", 1, true, "0")
 	if err != nil {
 		log.Println("Error creating start category dir: ", err)
 	}
@@ -75,15 +75,13 @@ func visit(p string, f os.FileInfo, e error) error {
 		go generateCoverImage(&comicfile)
 
 	} else {
-		//TODO: check if directory, if directory and directory=category is enabled (default), add it as a category
-		//limitation: category names (ie. directory names) MUST be unique.
-		if p == root {
-			//If the current directory is the root directory, we don't want to do anything
-			return nil
-		}
+
 		dir := filepath.Base(filepath.Dir(p))
 		name := filepath.Base(p)
 		category := models.Category{Name: name, Parent: dir, IsRoot: false}
+		if dir == root {
+			category.IsRoot = true
+		}
 		dbhandler.AddCategory(&category)
 	}
 	return nil

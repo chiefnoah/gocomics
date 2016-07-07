@@ -105,10 +105,27 @@ type CSComic struct {
 }
 
 type CSComicListResult struct {
+
 }
 
 type CSComicResult struct {
 	Comics     []CSComic `json:"comics"`
 	TotalCount int       `json:"total_count"`
 	PageCount  int       `json:"page_count"`
+}
+
+type CSFolderResponse struct {
+	Current string     `json:"current"`
+	Folders []CSFolder `json:"folders"`
+	Comics CSComicCountResponse `json:"comics"`
+}
+
+type CSComicCountResponse struct {
+	Count    int    `json:"count"`
+	URL_Path string `json:"url_path"`
+}
+
+type CSFolder struct {
+	URL_Path string `json:"url_path"`
+	Name     string `json:"name"`
 }
