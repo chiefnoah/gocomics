@@ -1,19 +1,19 @@
 package config
 
 import (
-	"io/ioutil"
-	"path/filepath"
-	"log"
 	"encoding/json"
+	"io/ioutil"
+	"log"
+	"path/filepath"
 )
 
 type ApiConfig struct {
-	UseTLS   bool `json:"use_tls"`
-	ForceTLS bool `json:"force_tls"`
-	SSLPort  string `json:"ssl_port"`
-	HttpPort string `json:"http_port"`
+	UseTLS       bool     `json:"use_tls"`
+	ForceTLS     bool     `json:"force_tls"`
+	SSLPort      string   `json:"ssl_port"`
+	HttpPort     string   `json:"http_port"`
+	ComicFolders []string `json:"comic_folders"`
 }
-
 
 const CONFIG_FILE string = "config.json"
 

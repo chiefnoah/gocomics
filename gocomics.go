@@ -21,7 +21,8 @@ func main() {
 	database.Init()
 
 	c := config.LoadConfigFile()
-	go comicscanner.Scan(`./comics`)
+	go comicscanner.Scan(c.ComicFolders[0])
+	//go comicscanner.Scan(c.ComicFolders[1])
 	web.Start(c)
 
 }

@@ -81,9 +81,9 @@ func ExtractComic(comicfile *models.ComicFile) error {
 }
 
 func ExtractCoverImage(comicfile *models.ComicFile) error {
-	r, err := zip.OpenReader(comicfile.AbsolutePath)
+	r, err := zip.OpenReader(filepath.Join(comicfile.AbsolutePath, comicfile.FileName))
 	if err != nil {
-		log.Print("Unable to extract cbz\n")
+		log.Print("Unable to extract cbz ", err)
 		return err
 	}
 	defer func() {
@@ -109,7 +109,6 @@ func ExtractCoverImage(comicfile *models.ComicFile) error {
 		}
 		dirname := filepath.Join(wd, IMAGES_DIR)
 		path := filepath.Join(dirname, comicfile.Hash)
-		fmt.Println("Extracting to: ", path)
 		//This probably isn't necessary because we're always dealing with .cbz/.zip files
 		if f.FileInfo().IsDir() {
 			os.MkdirAll(path, f.Mode())

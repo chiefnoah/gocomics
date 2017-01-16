@@ -2,13 +2,12 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 	"log"
-	"os"
 	"strings"
 
 	"git.chiefnoah.tech/chiefnoah/gocomics/models"
 	_ "github.com/mattn/go-sqlite3"
+	sq "github.com/Masterminds/squirrel"
 )
 
 //holds a reference to a database connection and a transaction used for large database processes
@@ -172,7 +171,7 @@ func (h *Dbhandler) AddCategory(category *models.Category) error {
 
 	INSERT_CATEGORY := `INSERT OR REPLACE INTO Category(ID, Name, Parent, IsRoot, Full) VALUES(IFNULL((SELECT ID FROM Category WHERE Name = ?), (SELECT SEQ from sqlite_sequence WHERE name='Category') + 1) ,?, IFNULL((SELECT ID FROM Category WHERE Name = ?), 1), ?, IFNULL((SELECT Full FROM Category WHERE Name = ?), "0") || ? || ?)`
 
-	stmt, err := h.Transaction.Prepare(INSERT_CATEGORY)
+	stmt, err := h.Db.Prepare(INSERT_CATEGORY)
 	if err != nil {
 		log.Println("Error preparing statement: ", err)
 		return err
@@ -180,7 +179,7 @@ func (h *Dbhandler) AddCategory(category *models.Category) error {
 
 	defer stmt.Close()
 
-	_, err = stmt.Exec(category.Name, category.Name, category.Parent, category.IsRoot, category.Parent, fmt.Sprintf("%c", os.PathSeparator), category.Name)
+	_, err = stmt.Exec(category.Name, category.Name, category.Parent, category.IsRoot, category.Parent, "/", category.Name)
 	if err != nil {
 		log.Println("Error adding category: ", err)
 	}
@@ -237,7 +236,6 @@ func GetChildrenCategories(ID int) *[]models.Category {
 
 	sql := `SELECT ID, Name, Parent, IsRoot, Full FROM Category WHERE Parent = ?`
 
-
 	rows, err := db.Query(sql, ID)
 	if err != nil {
 		log.Println("Unable to get children categories: ", err)
@@ -273,6 +271,16 @@ func GetChildrenComicsCount(ID int) int {
 	return count
 }
 
+func GetChildrenComicsById(ID int) *[]models.ComicWrapper {
+
+	return nil
+}
+
+func GetChildrenComicsByFolder(folder string) *[]models.ComicWrapper {
+
+	return nil
+}
+
 func CleanCategory() error {
 	//TODO: ONLY IF CATEGORY IS DIRECTORY STRUCTURE: remove rows that have no comics or children categories in them
 	return nil
@@ -290,7 +298,7 @@ func (h *Dbhandler) AddComic(comic *models.ComicInfo, file *models.ComicFile) er
 	VALUES (?, ?, ?, ?, (SELECT ID FROM ComicFile WHERE ComicFile.Hash = ?), ?, ?, ?, ?, ?, ?, ?,
 	IFNULL((SELECT ID FROM Category WHERE Full = (SELECT '0\' || RelativePath FROM ComicFile WHERE ComicFile.Hash = ?)), 1))`
 
-	stmt, err := h.Transaction.Prepare(INSERT_COMIC_FILE_INFO)
+	stmt, err := h.Db.Prepare(INSERT_COMIC_FILE_INFO)
 	defer stmt.Close()
 	if err != nil {
 		log.Println(err)
@@ -302,7 +310,7 @@ func (h *Dbhandler) AddComic(comic *models.ComicInfo, file *models.ComicFile) er
 		if strings.Contains(err.Error(), "UNIQUE") {
 			log.Print("File already in database, updating to latest info...")
 			sql := `UPDATE ComicFile SET RelativePath = ?, AbsolutePath = ?, FileName = ? WHERE Hash = ?`
-			st, err := h.Transaction.Prepare(sql)
+			st, err := h.Db.Prepare(sql)
 			defer st.Close()
 			if err != nil {
 				log.Println("Unable to prepare statement: ", err)
@@ -321,7 +329,7 @@ func (h *Dbhandler) AddComic(comic *models.ComicInfo, file *models.ComicFile) er
 		}
 	}
 
-	stmt2, err := h.Transaction.Prepare(INSERT_COMIC_INFO)
+	stmt2, err := h.Db.Prepare(INSERT_COMIC_INFO)
 	defer stmt2.Close()
 	if err != nil {
 		log.Println(err)
@@ -344,8 +352,44 @@ func (h *Dbhandler) AddComic(comic *models.ComicInfo, file *models.ComicFile) er
 	return nil
 }
 
+func (h *Dbhandler) GetComics(query *models.ComicWrapper) *[]models.ComicWrapper {
+
+	sql := sq.Select("Comic.ID, Title, Series, IssueNumber, PageCount, Hash, Volume, DateAdded, PublishDate, Synopsis, Rating, Status, RelativePath, AbsolutePath, FileName, Filesize").From("Comic").Join("ComicFile USING (Hash)")
+
+	if query.ComicInfo.ID > 0 {
+		sql = sql.Where("Comic.ID = ?", query.ComicInfo.ID)
+	}
+	if query.ComicInfo.Hash != "" {
+		sql = sql.Where("Comic.Hash = ?", query.ComicInfo.Hash)
+	}
+	if query.ComicInfo.Title != "" {
+		sql = sql.Where("Title = ?", query.ComicInfo.Title)
+	}
+	if query.ComicInfo.Series != "" {
+		sql = sql.Where("Series = ?", query.ComicInfo.Title)
+	}
+	if query.ComicInfo.IssueNumber > 0 {
+		sql = sql.Where("IssueNumber = ?", query.ComicInfo.IssueNumber)
+	}
+	//TODO: Continue with these query operators
+
+
+	return nil
+}
+
+func GetDBHandler() *Dbhandler {
+	var handler Dbhandler
+	db, err := sql.Open("sqlite3", "./library.mdb")
+	if err != nil {
+		log.Fatal("Unable to open database: ", err)
+	}
+	handler.Db = db
+	handler.Transaction = nil
+	return &handler
+}
+
 func (h *Dbhandler) ExecuteSql(sql string, params ...interface{}) error {
-	stmt, err := h.Transaction.Prepare(sql)
+	stmt, err := h.Db.Prepare(sql)
 	if err != nil {
 		log.Println("Unable to begin statement in transaction: ", err)
 		return err
@@ -355,22 +399,34 @@ func (h *Dbhandler) ExecuteSql(sql string, params ...interface{}) error {
 }
 
 //Creates a new dbhandler object for running a transaction
-func BeginTransaction() *Dbhandler {
-	var handler Dbhandler
+func (h *Dbhandler) BeginTransaction() {
 
-	db, err := sql.Open("sqlite3", "./library.mdb")
-	if err != nil {
-		log.Fatal("Unable to open database: ", err)
+	if h.Db == nil {
+		db, err := sql.Open("sqlite3", "./library.mdb")
+		if err != nil {
+			log.Fatal("Unable to open database: ", err)
+		}
+		h.Db = db
 	}
-	handler.Db = db
 
-	tx, err := db.Begin()
-	handler.Transaction = tx
-	return &handler
+	if h.Transaction != nil {
+		log.Printf("Transaction already in progress. Not initializing a new one...")
+		return
+	}
+
+	tx, err := h.Db.Begin()
+	if err != nil {
+		log.Printf("Unable to begin transaction: %s", err)
+	}
+	h.Transaction = tx
 }
 
 func (h *Dbhandler) FinishTransaction() error {
+	if h.Transaction == nil {
+		log.Print("Transaction finished before started. Wut?")
+		return nil
+	}
 	err := h.Transaction.Commit()
-	defer h.Db.Close()
+	h.Transaction = nil
 	return err
 }

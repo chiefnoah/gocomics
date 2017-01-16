@@ -19,18 +19,20 @@ import (
 var root string
 var dbhandler *database.Dbhandler
 
+//TODO: load comic root path strings from config so we can scan all of them
 func Scan(f string) error {
-	root = f
+	root = f //I don't remember why I do this lol
 	//base := filepath.Base(f)
 	//models.Category{ID: 1, Name: base, Parent: 1, IsRoot:true, Full: base}
 	//generates the temp and image directories
 	setupDirs()
-	dbhandler = database.BeginTransaction()
+	dbhandler = database.GetDBHandler()
+	dbhandler.BeginTransaction()
+	defer dbhandler.FinishTransaction()
 	err := dbhandler.ExecuteSql(`INSERT OR IGNORE INTO Category(ID, Name, Parent, IsRoot, Full) VALUES(?, ?, ?, ?, ?)`, 1, "0", 1, true, "0")
 	if err != nil {
 		log.Println("Error creating start category dir: ", err)
 	}
-	defer dbhandler.FinishTransaction()
 	err = filepath.Walk(f, visit)
 	if err != nil {
 		fmt.Printf("walk error: %v\n", err)
@@ -72,10 +74,9 @@ func visit(p string, f os.FileInfo, e error) error {
 
 		//fmt.Printf("MD5: %s\n", comicfile.Hash)
 		dbhandler.AddComic(&models.ComicInfo{}, &comicfile)
-		go generateCoverImage(&comicfile)
+		go generateCoverImage(comicfile)
 
 	} else {
-
 		dir := filepath.Base(filepath.Dir(p))
 		name := filepath.Base(p)
 		category := models.Category{Name: name, Parent: dir, IsRoot: false}
@@ -97,11 +98,11 @@ func setupDirs() {
 	os.MkdirAll(utils.CACHE_DIR, 0755)
 }
 
-func generateCoverImage(comicfile *models.ComicFile) {
-
+func generateCoverImage(comicfile models.ComicFile) {
+	//TODO: fix this :(
 	if _, f := os.Stat(filepath.Join(utils.IMAGES_DIR, comicfile.Hash)); os.IsNotExist(f) {
 		fmt.Println("No cover image found, generating")
-		err := utils.ExtractCoverImage(comicfile)
+		err := utils.ExtractCoverImage(&comicfile)
 		if err != nil {
 			log.Println("Extraction error: ", err)
 		}

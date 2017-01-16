@@ -1,13 +1,15 @@
 package web
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"git.chiefnoah.tech/chiefnoah/gocomics/models"
 	"git.chiefnoah.tech/chiefnoah/gocomics/database"
 	"strings"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"log"
 )
 
 
@@ -27,6 +29,10 @@ func versionHandler(c *gin.Context) {
 
 func comicListHandler(c *gin.Context) {
 
+	result := models.CSComicResult{}
+
+	c.JSON(http.StatusOK, result)
+
 }
 
 func foldersHandler(c *gin.Context) {
@@ -43,12 +49,12 @@ func foldersHandler(c *gin.Context) {
 	}
 	category := database.GetCategory(&query)
 	childrenFolders := database.GetChildrenCategories(category.ID)
-	fmt.Printf("Children folders: %+v", childrenFolders)
 	childrenComicsCount := database.GetChildrenComicsCount(category.ID)
 	childrenComics := models.CSComicCountResponse{
 		Count: childrenComicsCount,
-		URL_Path: "/comiclist?folder=" + category.Full,
+		URL_Path: "/comiclist?folder=" + url.QueryEscape(category.Full),
 	}
+	log.Print("URL_PATH: ", childrenComics.URL_Path)
 	folders := []models.CSFolder{}
 
 	for _, v := range *childrenFolders {
@@ -56,9 +62,19 @@ func foldersHandler(c *gin.Context) {
 			continue
 		}
 		csfolder := models.CSFolder{}
-		csfolder.URL_Path = "/folders/" + strings.Replace(v.Full, "\\", "/", -1)
+		//This is a stupid workaround to url escape all the folders in the category path without losing the
+		//path separators.
+		split_path := strings.Split(v.Full, "/")
+		for i, folder := range split_path {
+			//We can't just URL escape this because for some reason url.QueryEscape() will only replace
+			// spaces with a + instead of %20, and there doesn't seem to be a way around it
+			split_path[i] = strings.Replace(folder, " ", "%20", -1)
+		}
+		v.Full = strings.Join(split_path, "/")
+		csfolder.URL_Path = "/folders/" + v.Full
 		csfolder.Name = v.Name
 		folders = append(folders, csfolder)
+		log.Print("CS Folder URL_Path: ", csfolder.URL_Path)
 	}
 
 	result := models.CSFolderResponse{

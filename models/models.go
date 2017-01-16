@@ -32,6 +32,11 @@ type ComicFile struct {
 	FileSize     int64  `json:"filesize"`
 }
 
+type ComicWrapper struct {
+	ComicInfo ComicInfo `json:"comic_info"`
+	ComicFile ComicFile `json:"comic_file"`
+}
+
 type credit struct {
 	Author    string `json:"author"`
 	Artist    string `json:"artist"`
@@ -104,10 +109,6 @@ type CSComic struct {
 	Teams        []string `json:"teams"`
 }
 
-type CSComicListResult struct {
-
-}
-
 type CSComicResult struct {
 	Comics     []CSComic `json:"comics"`
 	TotalCount int       `json:"total_count"`
@@ -115,9 +116,9 @@ type CSComicResult struct {
 }
 
 type CSFolderResponse struct {
-	Current string     `json:"current"`
-	Folders []CSFolder `json:"folders"`
-	Comics CSComicCountResponse `json:"comics"`
+	Current string               `json:"current"`
+	Folders []CSFolder           `json:"folders"`
+	Comics  CSComicCountResponse `json:"comics"`
 }
 
 type CSComicCountResponse struct {
