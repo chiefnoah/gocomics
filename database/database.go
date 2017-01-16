@@ -8,6 +8,7 @@ import (
 	"git.chiefnoah.tech/chiefnoah/gocomics/models"
 	_ "github.com/mattn/go-sqlite3"
 	sq "github.com/Masterminds/squirrel"
+
 )
 
 //holds a reference to a database connection and a transaction used for large database processes
@@ -186,13 +187,8 @@ func (h *Dbhandler) AddCategory(category *models.Category) error {
 	return err
 }
 
-func GetCategory(query *models.Category) *models.Category {
-	db, err := sql.Open("sqlite3", "./library.mdb")
-	if err != nil {
-		log.Fatal("Unable to open database: ", err)
-	}
+func (h *Dbhandler) GetCategory(query *models.Category) *models.Category {
 
-	defer db.Close()
 
 	//var value *models.Category
 	var row *sql.Row
@@ -201,22 +197,22 @@ func GetCategory(query *models.Category) *models.Category {
 	sql := `SELECT ID, Name, Parent, IsRoot, Full FROM Category WHERE `
 	if query.ID > 0 {
 		sql += `ID = ?`
-		row = db.QueryRow(sql, query.ID)
+		row = h.Db.QueryRow(sql, query.ID)
 	} else if query.Name != "" {
 		sql += `Name = ?`
-		row = db.QueryRow(sql, query.Name)
+		row = h.Db.QueryRow(sql, query.Name)
 	} else if query.ParentId > 0 {
 		sql += `Parent = ?`
-		row = db.QueryRow(sql, query.ParentId)
+		row = h.Db.QueryRow(sql, query.ParentId)
 	} else if query.Full != "" {
 		sql += `Full LIKE ?`
-		row = db.QueryRow(sql, query.Full)
+		row = h.Db.QueryRow(sql, query.Full)
 	} else if query.Parent != "" {
 		sql += `Full LIKE ?`
-		row = db.QueryRow(sql, query.Parent)
+		row = h.Db.QueryRow(sql, query.Parent)
 	}
 
-	err = row.Scan(&value.ID, &value.Name, &value.ParentId, &value.IsRoot, &value.Full)
+	err := row.Scan(&value.ID, &value.Name, &value.ParentId, &value.IsRoot, &value.Full)
 	if err != nil {
 		log.Println("Unable to get Category: ", err)
 		return nil
@@ -226,17 +222,11 @@ func GetCategory(query *models.Category) *models.Category {
 
 }
 
-func GetChildrenCategories(ID int) *[]models.Category {
-	db, err := sql.Open("sqlite3", "./library.mdb")
-	if err != nil {
-		log.Fatal("Unable to open database: ", err)
-	}
-
-	defer db.Close()
+func (h *Dbhandler) GetChildrenCategories(ID int) *[]models.Category {
 
 	sql := `SELECT ID, Name, Parent, IsRoot, Full FROM Category WHERE Parent = ?`
 
-	rows, err := db.Query(sql, ID)
+	rows, err := h.Db.Query(sql, ID)
 	if err != nil {
 		log.Println("Unable to get children categories: ", err)
 		return &[]models.Category{}
@@ -251,18 +241,12 @@ func GetChildrenCategories(ID int) *[]models.Category {
 	return &children
 }
 
-func GetChildrenComicsCount(ID int) int {
-	db, err := sql.Open("sqlite3", "./library.mdb")
-	if err != nil {
-		log.Fatal("Unable to open database: ", err)
-	}
-
-	defer db.Close()
+func (h *Dbhandler) GetChildrenComicsCount(ID int) int {
 
 	sql := `SELECT COUNT(*) FROM Comic WHERE CategoryID = ?`
-	row := db.QueryRow(sql, ID)
+	row := h.Db.QueryRow(sql, ID)
 	var count int = 0
-	err = row.Scan(&count)
+	err := row.Scan(&count)
 	if err != nil {
 		log.Println("Couldn't get children comics: ", err)
 		count = 0

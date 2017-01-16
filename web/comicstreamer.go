@@ -44,8 +44,8 @@ func comicListHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func foldersHandler(w http.ResponseWriter, r *http.Request) {
-	print("FUCK MUX")
+func rootFolderHandler(w http.ResponseWriter, r *http.Request) {
+	log.Print("Thinks it's a root path")
 	//pathParams := mux.Vars(r)
 	requestUrl, err := url.Parse(r.RequestURI)
 	if err != nil {
@@ -53,21 +53,44 @@ func foldersHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var path string
-	if requestUrl.Path == "/" {
-		path = "/0"
+	if requestUrl.Path == "/folders" {
+		path = "/folders/0/"
 	} else {
 		path = requestUrl.Path
 	}
 
+	log.Print("PATH: ", path)
+	base := filepath.Base(path)
+	fmt.Println("Base: ", base)
+	w.Write([]byte("HI"))
+
+}
+
+func foldersHandler(w http.ResponseWriter, r *http.Request) {
+	//pathParams := mux.Vars(r)
+	requestUrl, err := url.Parse(r.RequestURI)
+	if err != nil {
+		log.Print("How did you even mess this up? How did it make it this far???")
+		return
+	}
+	var path string
+	if requestUrl.Path == "/folders" || requestUrl.Path == "/folders/" {
+		path = "/folders/0/"
+	} else {
+		path = requestUrl.Path
+	}
+
+	log.Print("PATH: ", path)
 	base := filepath.Base(path)
 	fmt.Println("Base: ", base)
 
 	var query = models.Category{
 		Name: base,
 	}
-	category := database.GetCategory(&query)
-	childrenFolders := database.GetChildrenCategories(category.ID)
-	childrenComicsCount := database.GetChildrenComicsCount(category.ID)
+	dbhandler := database.GetDBHandler()
+	category := dbhandler.GetCategory(&query)
+	childrenFolders := dbhandler.GetChildrenCategories(category.ID)
+	childrenComicsCount := dbhandler.GetChildrenComicsCount(category.ID)
 	childrenComics := models.CSComicCountResponse{
 		Count: childrenComicsCount,
 		URL_Path: "/comiclist?folder=" + url.QueryEscape(category.Full),

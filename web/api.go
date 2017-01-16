@@ -18,8 +18,9 @@ func Start(c *config.ApiConfig) {
 	router.HandleFunc("/dbinfo", dbInfoHandler)
 	router.HandleFunc("/version", versionHandler)
 	router.HandleFunc("/comiclist", comicListHandler)
+	router.HandleFunc(`/folders`, foldersHandler)
 	router.HandleFunc(`/folders/{root:[0-9]+}`, foldersHandler)
-	router.HandleFunc(`/folders/{path:[a-zA-Z0-9=\-\/\\]+}`, foldersHandler)
+	router.HandleFunc(`/folders/{path:.*}`, foldersHandler)
 
 	log.Printf("Config: %+s", *c)
 
