@@ -15,6 +15,9 @@ const (
 	CACHE_DIR  = ".temp"
 )
 
+
+
+
 //based off answer here https://stackoverflow.com/questions/20357223/easy-way-to-unzip-file-with-golang
 //Extracts a cbz to the .temp directory inside a folder with the same name
 func ExtractComic(comicfile *models.ComicFile) error {

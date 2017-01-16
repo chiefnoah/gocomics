@@ -8,8 +8,8 @@ import (
 	"git.chiefnoah.tech/chiefnoah/gocomics/database"
 	"strings"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"log"
+	"encoding/json"
 )
 
 
@@ -19,26 +19,44 @@ Comic Streamer compatibility API endpoints and stuff goes here
 
 
  */
-func dbInfoHandler(c *gin.Context) {
-	c.String(http.StatusOK, `{"comic_count": 13398, "last_updated": "2015-08-31T20:16:58.035000", "id": "f03b53dbd5364377867227e23112d3c7", "created": "2015-06-18T19:13:35.030000"}`)
+func dbInfoHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(`{"comic_count": 13398, "last_updated": "2015-08-31T20:16:58.035000", "id": "f03b53dbd5364377867227e23112d3c7", "created": "2015-06-18T19:13:35.030000"}`))
 }
 
-func versionHandler(c *gin.Context) {
-	c.String(http.StatusOK, `{"last_build": "2016-07-03", "version": "0.0.7"}`)
+func versionHandler(w http.ResponseWriter, r *http.Request) {
+	//Dummy info lol
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"last_build": "2016-07-03", "version": "0.0.7"}`))
+	w.WriteHeader(http.StatusOK)
+
 }
 
-func comicListHandler(c *gin.Context) {
+func comicListHandler(w http.ResponseWriter, r *http.Request) {
 
 	result := models.CSComicResult{}
 
-	c.JSON(http.StatusOK, result)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Printf("JSON Ecode error: %s", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+
+	}
 
 }
 
-func foldersHandler(c *gin.Context) {
-	path := c.Param("path")
-	if path == "/" {
+func foldersHandler(w http.ResponseWriter, r *http.Request) {
+	print("FUCK MUX")
+	//pathParams := mux.Vars(r)
+	requestUrl, err := url.Parse(r.RequestURI)
+	if err != nil {
+		log.Print("How did you even mess this up? How did it make it this far???")
+		return
+	}
+	var path string
+	if requestUrl.Path == "/" {
 		path = "/0"
+	} else {
+		path = requestUrl.Path
 	}
 
 	base := filepath.Base(path)
@@ -87,6 +105,9 @@ func foldersHandler(c *gin.Context) {
 	//for _, v := range categoryNames {
 		//TODO: query database for category
 	//}
+	w.Header().Set("Content-Type", "application/json")
 
-	c.JSON(http.StatusOK, result)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }

@@ -24,5 +24,4 @@ func main() {
 	go comicscanner.Scan(c.ComicFolders[0])
 	//go comicscanner.Scan(c.ComicFolders[1])
 	web.Start(c)
-
 }
