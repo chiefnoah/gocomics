@@ -16,12 +16,14 @@ import (
 	"strings"
 )
 
-var root string
+var root string = ""
 var dbhandler *database.Dbhandler
+var index string = ""
 
 //TODO: load comic root path strings from config so we can scan all of them
-func Scan(f string) error {
-	root = f //I don't remember why I do this lol
+func Scan(f, group string) error {
+	root = f
+	index = group
 	//base := filepath.Base(f)
 	//models.Category{ID: 1, Name: base, Parent: 1, IsRoot:true, Full: base}
 	//generates the temp and image directories
@@ -44,8 +46,12 @@ func Scan(f string) error {
 
 func visit(p string, f os.FileInfo, e error) error {
 
+	if strings.HasPrefix(filepath.Base(p), ".") {
+		log.Print("File or dir starts with a .\nSkipping.")
+		return filepath.SkipDir
+	}
 	fmt.Printf("Visited: %s\n", p)
-	if strings.EqualFold(path.Ext(f.Name()), ".cbz") || strings.EqualFold(path.Ext(f.Name()), ".cbr") {
+	if strings.EqualFold(path.Ext(f.Name()), ".cbz") /*|| strings.EqualFold(path.Ext(f.Name()), ".cbr")*/ {
 		//fmt.Printf("Found cbz file!\n")
 
 		//TODO: parse comic info
@@ -61,8 +67,11 @@ func visit(p string, f os.FileInfo, e error) error {
 		n := len(checksum)
 		comicfile.Hash = hex.EncodeToString(checksum[:n])
 		comicfile.FileSize = int64(f.Size())
-		rel, _ := filepath.Rel(root, p)
-		comicfile.RelativePath = filepath.Dir(filepath.ToSlash(filepath.Join(root, rel)))
+		rel, err := filepath.Rel(root, p)
+		if err != nil {
+			log.Printf("Relative path error: %s with root: %s and path %s", err, root, p)
+		}
+		comicfile.RelativePath = filepath.ToSlash(filepath.Dir(filepath.Join(index, rel)))
 		comicfile.FileName = f.Name()
 		if !path.IsAbs(root) {
 			ab, err := filepath.Abs(p)
@@ -87,7 +96,7 @@ func visit(p string, f os.FileInfo, e error) error {
 	}
 	return nil
 }
-
+//TODO: do directory watching so we know when a file has been modified
 func watch(f []string) error {
 	return nil
 }

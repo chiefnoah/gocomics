@@ -10,7 +10,7 @@ type ComicInfo struct {
 	Series      string   `json:"series"`
 	IssueNumber float32  `json:"issue_number"`
 	PageCount   int      `json:"page_count"`
-	Credits     credit   `json:"credits"`
+	Credits     Credit   `json:"credits"`
 	Volume      string   `json:"volume"`
 	Genres      []string `json:"genres"`
 	DateAdded   int64    `json:"date_added"`
@@ -37,7 +37,7 @@ type ComicWrapper struct {
 	ComicFile ComicFile `json:"comic_file"`
 }
 
-type credit struct {
+type Credit struct {
 	Author    string `json:"author"`
 	Artist    string `json:"artist"`
 	Publisher string `json:"publisher"`
@@ -98,7 +98,7 @@ type CSComic struct {
 	LastReadPage int      `json:"last_read_page"`
 	Weblink      string   `json:"weblink"`
 	Volume       string   `json:"volume"`
-	Credits      credit   `json:"credits,omitempty"`
+	Credits      Credit   `json:"credits,omitempty"`
 	GenericTags  []string `json:"generictags"`
 	Characters   []string `json:"characters"`
 	LastReadTs   string   `json:"lastread_ts"`

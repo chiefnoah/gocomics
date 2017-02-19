@@ -8,6 +8,7 @@ import (
 	"git.chiefnoah.tech/chiefnoah/gocomics/database"
 	"log"
 	"os"
+	"strconv"
 )
 
 //Let's get started!
@@ -21,7 +22,11 @@ func main() {
 	database.Init()
 
 	c := config.LoadConfigFile()
-	go comicscanner.Scan(c.ComicFolders[0])
-	//go comicscanner.Scan(c.ComicFolders[1])
+	go func() {
+		for i, folder := range c.ComicFolders {
+			comicscanner.Scan(folder, strconv.Itoa(i))
+		}
+	}()
+
 	web.Start(c)
 }

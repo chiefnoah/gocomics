@@ -111,7 +111,7 @@ func ExtractCoverImage(comicfile *models.ComicFile) error {
 			log.Fatal(err)
 		}
 		dirname := filepath.Join(wd, IMAGES_DIR)
-		path := filepath.Join(dirname, comicfile.Hash)
+		path := filepath.Join(dirname, comicfile.Hash + ".jpg") //EVERYTHING IS A JPG
 		//This probably isn't necessary because we're always dealing with .cbz/.zip files
 		if f.FileInfo().IsDir() {
 			os.MkdirAll(path, f.Mode())

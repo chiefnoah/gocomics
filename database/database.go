@@ -355,8 +355,33 @@ func (h *Dbhandler) GetComics(query *models.ComicWrapper) *[]models.ComicWrapper
 	if query.ComicInfo.IssueNumber > 0 {
 		sql = sql.Where("IssueNumber = ?", query.ComicInfo.IssueNumber)
 	}
+	if query.ComicInfo.PageCount > 0 {
+		sql = sql.Where("PageCount = ?", query.ComicInfo.PageCount)
+	}
+	//TODO: Credit queries
+	if query.ComicInfo.Volume != "" {
+		sql = sql.Where("Volume = ?", query.ComicInfo.Volume)
+	}
+	//This one is probably broken
+	if len(query.ComicInfo.Genres) > 0 {
+		sql = sql.Join("GenresBridge ON Comic.ID = GenresBridge.ComicID").Join("Genres ON GenresBridge.GenreID = Genres.ID")
+		for _, v := range query.ComicInfo.Genres {
+			sql = sql.Where("Genres.Genre = ?", v)
+		}
+	}
+	if query.ComicInfo.DateAdded > 0 {
+		sql = sql.Where("DateAdded = ?", query.ComicInfo.DateAdded)
+	}
 	//TODO: Continue with these query operators
 
+	rows, err := h.Db.Query(sql.ToSql())
+	if err != nil {
+		log.Print("Unable to find comics: ", err)
+	}
+	output := make([]models.ComicWrapper, 0)
+	for rows.Next() {
+
+	}
 
 	return nil
 }
