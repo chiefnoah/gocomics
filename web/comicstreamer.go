@@ -34,7 +34,7 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 func comicListHandler(w http.ResponseWriter, r *http.Request) {
 
 	result := models.CSComicResult{}
-
+	//TODO: actually return query results here
 	if err := json.NewEncoder(w).Encode(result); err != nil {
 		log.Printf("JSON Ecode error: %s", err)
 		w.Header().Set("Content-Type", "application/json")

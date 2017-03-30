@@ -76,7 +76,13 @@ type Category struct {
 /*
 ComicStreamer compatibility structures
 */
+type CSComicWrapper struct {
+	CSComicInfo CSComic
 
+
+
+
+}
 type CSComic struct {
 	AddedTs      string   `json:"added_ts"`
 	Series       string   `json:"series"`

@@ -380,10 +380,14 @@ func (h *Dbhandler) GetComics(query *models.ComicWrapper) *[]models.ComicWrapper
 	}
 	output := make([]models.ComicWrapper, 0)
 	for rows.Next() {
-
+		var comicWrapper = models.ComicWrapper{}
+		var comicFile = &comicWrapper.ComicFile
+		var comicInfo = &comicWrapper.ComicInfo
+		rows.Scan(&comicFile.ID, &comicInfo.Title, &comicInfo.Series, &comicInfo.IssueNumber, &comicInfo.PageCount, &comicInfo.Hash, &comicInfo.Volume, &comicInfo.DateAdded, &comicInfo.PublishDate, &comicInfo.Synopsis, &comicInfo.Rating, &comicInfo.Status, &comicFile.RelativePath, &comicFile.AbsolutePath, &comicFile.FileName, &comicFile.FileSize)
+		output = append(output, comicWrapper)
 	}
 
-	return nil
+	return &output
 }
 
 func GetDBHandler() *Dbhandler {
