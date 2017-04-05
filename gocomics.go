@@ -5,7 +5,6 @@ import (
 	"git.chiefnoah.tech/chiefnoah/gocomics/scanner"
 	"git.chiefnoah.tech/chiefnoah/gocomics/web"
 
-	"git.chiefnoah.tech/chiefnoah/gocomics/database"
 	"log"
 	"os"
 )
@@ -18,7 +17,6 @@ func main() {
 	}
 	defer f.Close()
 	//log.SetOutput(f)
-	database.Init()
 
 	c := config.LoadConfigFile()
 	go comicscanner.Scan(c.ComicFolders[0])

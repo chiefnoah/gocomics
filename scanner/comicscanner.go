@@ -17,7 +17,7 @@ import (
 )
 
 var root string
-var dbhandler *database.Dbhandler
+var cdb *database.ComicDB
 
 //TODO: load comic root path strings from config so we can scan all of them
 func Scan(f string) error {
@@ -26,13 +26,12 @@ func Scan(f string) error {
 	//models.Category{ID: 1, Name: base, Parent: 1, IsRoot:true, Full: base}
 	//generates the temp and image directories
 	setupDirs()
-	dbhandler = database.GetDBHandler()
-	dbhandler.BeginTransaction()
-	defer dbhandler.FinishTransaction()
-	err := dbhandler.ExecuteSql(`INSERT OR IGNORE INTO Category(ID, Name, Parent, IsRoot, Full) VALUES(?, ?, ?, ?, ?)`, 1, "0", 1, true, "0")
+	db, err := database.GetComicDatabase()
 	if err != nil {
-		log.Println("Error creating start category dir: ", err)
+		//well shit
+		panic("Database problemo")
 	}
+	cdb = db
 	err = filepath.Walk(f, visit)
 	if err != nil {
 		fmt.Printf("walk error: %v\n", err)
@@ -73,17 +72,23 @@ func visit(p string, f os.FileInfo, e error) error {
 		}
 
 		//fmt.Printf("MD5: %s\n", comicfile.Hash)
-		dbhandler.AddComic(&models.ComicInfo{}, &comicfile)
+		err = cdb.AddComicInfo(&models.ComicInfo{File: comicfile, Hash: comicfile.Hash})
+		cdb.GetComicInfo(&models.ComicInfo{Hash: comicfile.Hash})
+		if err != nil {
+			cdb.Log.Errorf("Unable to add comic: %s", err)
+		}
 		go generateCoverImage(comicfile)
 
 	} else {
-		dir := filepath.Base(filepath.Dir(p))
-		name := filepath.Base(p)
-		category := models.Category{Name: name, Parent: dir, IsRoot: false}
-		if dir == root {
-			category.IsRoot = true
-		}
-		dbhandler.AddCategory(&category)
+		//TODO: handle new folder structure
+		/*
+			dir := filepath.Base(filepath.Dir(p))
+			name := filepath.Base(p)
+			category := models.Category{Name: name, Parent: dir, IsRoot: false}
+			if dir == root {
+				category.IsRoot = true
+			}
+			dbhandler.AddCategory(&category) */
 	}
 	return nil
 }

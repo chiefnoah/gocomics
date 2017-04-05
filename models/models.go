@@ -4,23 +4,24 @@ package models
 MGA database structures used for internal stuff
 */
 type ComicInfo struct {
-	ID          int      `json:"id"`
-	Hash        string   `json:"hash"`
-	Title       string   `json:"title"`
-	Series      string   `json:"series"`
-	IssueNumber float32  `json:"issue_number"`
-	PageCount   int      `json:"page_count"`
-	Credits     credit   `json:"credits"`
-	Volume      string   `json:"volume"`
-	Genres      []string `json:"genres"`
-	DateAdded   int64    `json:"date_added"`
-	PublishDate int64    `json:"publish_date"`
-	Synopsis    string   `json:"synopsis"`
-	Characters  []string `json:"characters"`
-	Rating      float32  `json:"rating"`
-	Status      string   `json:"status"`
-	Bookmarks   []int    `json:"bookmarks"`
-	Other       []string `json:"other"` //Other tags are formatted "[tagname]:[tag]" semicolon delimited
+	File        ComicFile `json:"file"`
+	ID          int       `json:"id"`
+	Hash        string    `json:"hash"`
+	Title       string    `json:"title"`
+	Series      string    `json:"series"`
+	IssueNumber float32   `json:"issue_number"`
+	PageCount   int       `json:"page_count"`
+	Credits     []credit  `json:"credits"`
+	Volume      string    `json:"volume"`
+	Genres      []string  `json:"genres"`
+	DateAdded   int64     `json:"date_added"`
+	PublishDate int64     `json:"publish_date"`
+	Synopsis    string    `json:"synopsis"`
+	Characters  []string  `json:"characters"`
+	Rating      float32   `json:"rating"`
+	Status      string    `json:"status"`
+	Bookmarks   []int     `json:"bookmarks"`
+	Other       []string  `json:"other"` //Other tags are formatted "[tagname]:[tag]" semicolon delimited
 }
 
 type ComicFile struct {
@@ -30,11 +31,18 @@ type ComicFile struct {
 	FileName     string `json:"file_name"`
 	Hash         string `json:"hash"` //MD5 hash
 	FileSize     int64  `json:"filesize"`
+	FolderID     int    `json:"folder_id"`
 }
 
-type ComicWrapper struct {
-	ComicInfo ComicInfo `json:"comic_info"`
-	ComicFile ComicFile `json:"comic_file"`
+type Folder struct {
+	ID           int    `json:"id"`
+	RelativePath string `json:"relative_path"`
+	AbsolutePath string `json:"absolute_path"`
+	Base         string `json:"base"`
+	Name         string `json:"name"`
+	ParentID     int    `json:"parent_id"`
+	ChildrenID   []int  `json:"children_ids"`
+	ComicCount   int    `json:"comic_count"`
 }
 
 type credit struct {
@@ -61,21 +69,9 @@ type UserProgress struct {
 	LastReadPage  int   `json:"last_read_page"`
 }
 
-//Used to create a pseudo directory structure.
-//All comics must belong to a category. The default behavior
-//is to make each folder that is walked a category
-type Category struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Parent   string `json:"parent"`
-	ParentId int    `json:"parent_id"`
-	IsRoot   bool   `json:"is_root"`
-	Full     string `json:"full"`
-}
-
 /*
 ComicStreamer compatibility structures
-*/
+
 
 type CSComic struct {
 	AddedTs      string   `json:"added_ts"`
@@ -130,3 +126,4 @@ type CSFolder struct {
 	URL_Path string `json:"url_path"`
 	Name     string `json:"name"`
 }
+*/

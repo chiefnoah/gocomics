@@ -7,19 +7,24 @@ import (
 	"path/filepath"
 )
 
+//A map would work just as well, but I like things to be hard(ly typed)
 type ApiConfig struct {
-	UseTLS       bool     `json:"use_tls"`
-	ForceTLS     bool     `json:"force_tls"`
-	SSLPort      string   `json:"ssl_port"`
-	HttpPort     string   `json:"http_port"`
-	ComicFolders []string `json:"comic_folders"`
+	UseTLS         bool     `json:"use_tls"`
+	ForceTLS       bool     `json:"force_tls"`
+	SSLPort        string   `json:"ssl_port"`
+	HttpPort       string   `json:"http_port"`
+	ComicFolders   []string `json:"comic_folders"`
+	DatabaseFolder string   `json:"database_folder"`
 }
 
 const CONFIG_FILE string = "config.json"
 
-var GlobalConfig ApiConfig
+var globalConfig *ApiConfig
 
 func LoadConfigFile() *ApiConfig {
+	if globalConfig != nil {
+		return globalConfig
+	}
 	f, err := ioutil.ReadFile(CONFIG_FILE)
 	if err != nil {
 		log.Println("Could not load config: ", err)
@@ -30,9 +35,9 @@ func LoadConfigFile() *ApiConfig {
 	if err != nil {
 		log.Fatal("Could not load config: ", err)
 	}
-	GlobalConfig = config
+	globalConfig = &config
 
-	return &config
+	return globalConfig
 }
 
 func WriteConfigFile(config *ApiConfig) error {
