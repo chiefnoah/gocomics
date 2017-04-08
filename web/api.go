@@ -1,10 +1,10 @@
 package web
 
 import (
-	"git.chiefnoah.tech/chiefnoah/gocomics/config"
-	"net/http"
+	"git.packetlostandfound.us/chiefnoah/gocomics/config"
 	"github.com/gorilla/mux"
 	"log"
+	"net/http"
 )
 
 //This is where the REST API stuff will go
@@ -18,10 +18,10 @@ func Start(c *config.ApiConfig) {
 	router.HandleFunc("/dbinfo", dbInfoHandler)
 	router.HandleFunc("/version", versionHandler)
 	router.HandleFunc("/comiclist", comicListHandler)
-	router.HandleFunc(`/folders`, foldersHandler)
-	router.HandleFunc(`/folders/`, foldersHandler)
-	router.HandleFunc(`/folders/{root:[0-9]+}`, foldersHandler)
-	router.HandleFunc(`/folders/{root:[0-9]+}/{path:.*}`, foldersHandler)
+	//router.HandleFunc(`/folders`, foldersHandler)
+	//router.HandleFunc(`/folders/`, foldersHandler)
+	//router.HandleFunc(`/folders/{root:[0-9]+}`, foldersHandler)
+	//router.HandleFunc(`/folders/{root:[0-9]+}/{path:.*}`, foldersHandler)
 
 	log.Printf("Config: %+s", *c)
 
@@ -50,5 +50,3 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusFound)
 	w.Write([]byte("Hi"))
 }
-
-

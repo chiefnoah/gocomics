@@ -1,11 +1,9 @@
 package database
 
-import "git.chiefnoah.tech/chiefnoah/gocomics/models"
+//import "git.packetlostandfound.us/chiefnoah/gocomics/models"
 
-//
-func getCSComicInfo(query *models.CSComic) *models.CSComicResult{
-
-
+/*
+func getCSComicInfo(query *models.CSComic) *models.CSComicResult {
 
 	return nil
-}
+}*/

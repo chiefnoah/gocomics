@@ -1,24 +1,19 @@
 package web
 
 import (
-	"net/http"
-	"path/filepath"
-	"git.chiefnoah.tech/chiefnoah/gocomics/models"
-	"git.chiefnoah.tech/chiefnoah/gocomics/database"
-	"strings"
-	"log"
 	"encoding/json"
-	"github.com/gorilla/mux"
-	"net/url"
+	"log"
+	"net/http"
+	"git.packetlostandfound.us/chiefnoah/gocomics/models"
+	"git.packetlostandfound.us/chiefnoah/gocomics/database"
 )
-
 
 /*
 
 Comic Streamer compatibility API endpoints and stuff goes here
 
 
- */
+*/
 func dbInfoHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`{"comic_count": 13398, "last_updated": "2015-08-31T20:16:58.035000", "id": "f03b53dbd5364377867227e23112d3c7", "created": "2015-06-18T19:13:35.030000"}`))
 }
@@ -33,17 +28,25 @@ func versionHandler(w http.ResponseWriter, r *http.Request) {
 
 func comicListHandler(w http.ResponseWriter, r *http.Request) {
 
-	result := models.CSComicResult{}
+	query := models.ComicInfo{}
+	db, err := database.GetComicDatabase()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+	query.Hash = r.URL.Query().Get("hash")
+	db.Log.Debugf("Querying with: %+v", query)
+	output := db.GetComicInfo(&query)
 	//TODO: actually return query results here
-	if err := json.NewEncoder(w).Encode(result); err != nil {
+	db.Log.Debugf("Query results: %+x", *output)
+	if err := json.NewEncoder(w).Encode(*output); err != nil {
 		log.Printf("JSON Ecode error: %s", err)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
-
 	}
 
 }
 
+/*
 func foldersHandler(w http.ResponseWriter, r *http.Request) {
 	pathParams := mux.Vars(r)
 
@@ -109,3 +112,4 @@ func foldersHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 }
+*/

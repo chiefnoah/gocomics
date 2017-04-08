@@ -1,13 +1,12 @@
 package main
 
 import (
-	"git.chiefnoah.tech/chiefnoah/gocomics/config"
-	"git.chiefnoah.tech/chiefnoah/gocomics/scanner"
-	"git.chiefnoah.tech/chiefnoah/gocomics/web"
+	"git.packetlostandfound.us/chiefnoah/gocomics/config"
+	"git.packetlostandfound.us/chiefnoah/gocomics/scanner"
+	"git.packetlostandfound.us/chiefnoah/gocomics/web"
 
 	"log"
 	"os"
-	"strconv"
 )
 
 //Let's get started!
@@ -21,8 +20,8 @@ func main() {
 
 	c := config.LoadConfigFile()
 	go func() {
-		for i, folder := range c.ComicFolders {
-			comicscanner.Scan(folder, strconv.Itoa(i))
+		for _, folder := range c.ComicFolders {
+			comicscanner.Scan(folder)
 		}
 	}()
 

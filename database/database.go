@@ -1,11 +1,11 @@
 package database
 
 import (
-	"git.chiefnoah.tech/chiefnoah/gocomics/config"
-	"git.chiefnoah.tech/chiefnoah/gocomics/models"
+	"git.packetlostandfound.us/chiefnoah/gocomics/config"
+	"git.packetlostandfound.us/chiefnoah/gocomics/models"
 	"github.com/HouzuoGuo/tiedot/db"
-	"go.uber.org/zap"
 	"github.com/fatih/structs"
+	"go.uber.org/zap"
 )
 
 //Global database connection. Shared with all threads, cause thread safe :3
@@ -20,7 +20,7 @@ type ComicDB struct {
 type Database interface {
 	//getDbConnection() (*db, error)
 	//Comic Handling
-	GetComicInfo(*models.ComicInfo) *[]models.ComicInfo
+	GetComicInfo(*models.ComicInfo) *[]map[string]interface{}
 	AddComicInfo(*models.ComicInfo) error
 	UpdateComicInfo(*models.ComicInfo) error
 	DeleteComicInfo(file *models.ComicInfo) error
@@ -63,31 +63,34 @@ func GetComicDatabase() (*ComicDB, error) {
 	return globalDB, nil
 }
 
-func (database *ComicDB) GetComicInfo(comic *models.ComicInfo) *[]models.ComicInfo {
+func (database *ComicDB) GetComicInfo(comic *models.ComicInfo) *[]map[string]interface{} {
 	ci := database.td.Use("comicinfo")
 
-	query := map[string]interface{}{
-		"eq": comic.Hash,
-		"in": []interface{}{"Hash"},
+	query := "all"/*map[string]interface{}{
+		"eq":    comic.Hash,
+		"in":    []interface{}{"Hash"},
 		"limit": 1,
-	}
+	}*/
 	result := make(map[int]struct{})
 	//You apparently have to index anything you want to query against
-	err := ci.Index([]string{"Hash"})
-	if err != nil {
-		database.Log.Infof("Unable to index: %s", err)
-	}
+	//err := ci.Index([]string{"Hash"})
+	//database.Log.Debugf("All index: %+x: ", ci.AllIndexes())
+	//if err != nil {
+	//	database.Log.Infof("Unable to index: %s", err)
+	//}
 	if err := db.EvalQuery(query, ci, &result); nil != err {
 		database.Log.Errorf("Unable to retrieve comic from database: %s", err)
 	}
-	output := []models.ComicInfo{}
+	output := make([]map[string]interface{}, len(result))
 
 	for id := range result {
 		readBack, err := ci.Read(id)
 		if err != nil {
 			database.Log.Errorf("Unable to read document: %s", err)
 		}
-		database.Log.Debugf("Resulting doc: %v\n", readBack)
+		database.Log.Debugf("ID: %s\nResulting doc: %v\n", id, readBack)
+		readBack["ID"] = id
+		output = append(output, readBack)
 	}
 
 	return &output
