@@ -15,6 +15,9 @@ const (
 	CACHE_DIR  = ".temp"
 )
 
+
+
+
 //based off answer here https://stackoverflow.com/questions/20357223/easy-way-to-unzip-file-with-golang
 //Extracts a cbz to the .temp directory inside a folder with the same name
 func ExtractComic(comicfile *models.ComicFile) error {
@@ -108,7 +111,7 @@ func ExtractCoverImage(comicfile *models.ComicFile) error {
 			log.Fatal(err)
 		}
 		dirname := filepath.Join(wd, IMAGES_DIR)
-		path := filepath.Join(dirname, comicfile.Hash)
+		path := filepath.Join(dirname, comicfile.Hash + ".jpg") //EVERYTHING IS A JPG
 		//This probably isn't necessary because we're always dealing with .cbz/.zip files
 		if f.FileInfo().IsDir() {
 			os.MkdirAll(path, f.Mode())

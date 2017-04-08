@@ -1,53 +1,73 @@
 package web
 
 import (
-
-	"github.com/gin-gonic/gin"
-
 	"net/http"
-
+	"path/filepath"
+	"git.chiefnoah.tech/chiefnoah/gocomics/models"
+	"git.chiefnoah.tech/chiefnoah/gocomics/database"
+	"strings"
+	"log"
+	"encoding/json"
+	"github.com/gorilla/mux"
+	"net/url"
 )
+
 
 /*
 
 Comic Streamer compatibility API endpoints and stuff goes here
 
 
-*/
-func dbInfoHandler(c *gin.Context) {
-	c.String(http.StatusOK, `{"comic_count": 13398, "last_updated": "2015-08-31T20:16:58.035000", "id": "f03b53dbd5364377867227e23112d3c7", "created": "2015-06-18T19:13:35.030000"}`)
+ */
+func dbInfoHandler(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(`{"comic_count": 13398, "last_updated": "2015-08-31T20:16:58.035000", "id": "f03b53dbd5364377867227e23112d3c7", "created": "2015-06-18T19:13:35.030000"}`))
 }
 
-func versionHandler(c *gin.Context) {
-	c.String(http.StatusOK, `{"last_build": "2016-07-03", "version": "0.0.7"}`)
+func versionHandler(w http.ResponseWriter, r *http.Request) {
+	//Dummy info lol
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte(`{"last_build": "2016-07-03", "version": "0.0.7"}`))
+	w.WriteHeader(http.StatusOK)
+
 }
 
-/*
-func comicListHandler(c *gin.Context) {
+func comicListHandler(w http.ResponseWriter, r *http.Request) {
 
 	result := models.CSComicResult{}
+	//TODO: actually return query results here
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		log.Printf("JSON Ecode error: %s", err)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
 
-	c.JSON(http.StatusOK, result)
+	}
 
 }
 
-func foldersHandler(c *gin.Context) {
-	path := c.Param("path")
-	if path == "/" {
-		path = "/0"
+func foldersHandler(w http.ResponseWriter, r *http.Request) {
+	pathParams := mux.Vars(r)
+
+	if pathParams["root"] == "" {
+		pathParams["root"] = "0"
 	}
-
-	base := filepath.Base(path)
-	fmt.Println("Base: ", base)
-
+	base := filepath.Base(pathParams["root"] + "/" + pathParams["path"])
+	//log.Print("Path: ", base)
 	var query = models.Category{
 		Name: base,
 	}
-	category := database.GetCategory(&query)
-	childrenFolders := database.GetChildrenCategories(category.ID)
-	childrenComicsCount := database.GetChildrenComicsCount(category.ID)
+	dbhandler := database.GetDBHandler()
+	category := dbhandler.GetCategory(&query)
+	if category == nil {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404"))
+		return
+	}
+	childrenFolders := dbhandler.GetChildrenCategories(category.ID)
+	childrenComicsCount := dbhandler.GetChildrenComicsCount(category.ID)
 	childrenComics := models.CSComicCountResponse{
 		Count: childrenComicsCount,
+		//Yes, I know this looks weird. We split the full path by the "/" character then join it minus the
+		//1st element because it's usually a 0 and represents the folder/category group
 		URL_Path: "/comiclist?folder=" + url.QueryEscape(category.Full),
 	}
 	log.Print("URL_PATH: ", childrenComics.URL_Path)
@@ -83,7 +103,9 @@ func foldersHandler(c *gin.Context) {
 	//for _, v := range categoryNames {
 		//TODO: query database for category
 	//}
+	w.Header().Set("Content-Type", "application/json")
 
-	c.JSON(http.StatusOK, result)
+	if err := json.NewEncoder(w).Encode(result); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 }
-*/

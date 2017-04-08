@@ -7,6 +7,7 @@ import (
 
 	"log"
 	"os"
+	"strconv"
 )
 
 //Let's get started!
@@ -19,8 +20,11 @@ func main() {
 	//log.SetOutput(f)
 
 	c := config.LoadConfigFile()
-	go comicscanner.Scan(c.ComicFolders[0])
-	//go comicscanner.Scan(c.ComicFolders[1])
-	web.Start(c)
+	go func() {
+		for i, folder := range c.ComicFolders {
+			comicscanner.Scan(folder, strconv.Itoa(i))
+		}
+	}()
 
+	web.Start(c)
 }
